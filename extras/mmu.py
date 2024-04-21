@@ -491,6 +491,7 @@ class Mmu:
         self.servo_buzz_gear_on_t2 = config.getint('servo_buzz_gear_on_t2', 3, minval=0, maxval=10)
         self.servo_buzz_gear_on_t3 = config.getint('servo_buzz_gear_on_t3', 3, minval=0, maxval=10)
         self.servo_buzz_gear_on_t4 = config.getint('servo_buzz_gear_on_t4', 3, minval=0, maxval=10)
+        self.servo_select = {0: self._servo_t0, 1: self._servo_t1, 2: self._servo_t2, 3: self._servo_t3, 4: self._servo_t4}
 
         # TMC current control
         self.extruder_homing_current = config.getint('extruder_homing_current', 50, minval=10, maxval=100)
@@ -2111,8 +2112,7 @@ class Mmu:
             self._servo_up()
 
     def _select_servo(self, key):
-        servo_select = {0: self._servo_t0, 1: self._servo_t1, 2: self._servo_t2, 3: self._servo_t3, 4: self._servo_t4}
-        return servo_select
+        return self.servo_select.get(key)
 
     def _motors_off(self, motor="all"):
         stepper_enable = self.printer.lookup_object('stepper_enable')
