@@ -4677,7 +4677,7 @@ class Mmu:
     def _position_selector(self, target):
         if not self.selector_touch:
             # self._trace_selector_move("Positioning selector", target)
-            self._select_servo[target]()
+            self._select_servo(target)
         else:
             init_pos = self.mmu_toolhead.get_position()[0]
             halt_pos, successful = self._attempt_selector_touch_move(target)
