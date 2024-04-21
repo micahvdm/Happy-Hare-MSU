@@ -548,7 +548,7 @@ class MmuHoming(Homing, object):
         #     for axis in homing_axes:
         #         homepos[axis] = newpos[axis]
         #     self.toolhead.set_position(homepos)
-        self.servo.set_value(angle=self.servo_angles['up'], duration=None if self.servo_active_up else self.servo_duration)
+        # self.servo.set_value(angle=self.servo_angles['up'], duration=None if self.servo_active_up else self.servo_duration)
 
 
 # Extend PrinterRail to allow for multiple (switchable) endstops and to allow for no default endstop
