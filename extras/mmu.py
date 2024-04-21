@@ -4666,17 +4666,17 @@ class Mmu:
     def _home_selector(self):
         self.is_homed = True
         self.gate_selected = self.TOOL_GATE_UNKNOWN
-        self._servo_move()
-        self._movequeues_wait_moves()
-        # homing_state = MmuHoming(self.printer, self.mmu_toolhead)
-        # homing_state.set_axes([0])
-        try:
-            # self.mmu_kinematics.home(homing_state)
-            self.is_homed = True
-        except Exception as e: # Homing failed
-            self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
-            raise MmuError("Homing selector failed because of blockage or malfunction. Klipper reports: %s" % str(e))
-        self.last_selector_move_time = self.estimated_print_time(self.reactor.monotonic())
+        # self._servo_move()
+        # self._movequeues_wait_moves()
+        # # homing_state = MmuHoming(self.printer, self.mmu_toolhead)
+        # # homing_state.set_axes([0])
+        # try:
+        #     # self.mmu_kinematics.home(homing_state)
+        #     self.is_homed = True
+        # except Exception as e: # Homing failed
+        #     self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
+        #     raise MmuError("Homing selector failed because of blockage or malfunction. Klipper reports: %s" % str(e))
+        # self.last_selector_move_time = self.estimated_print_time(self.reactor.monotonic())
 
     def _position_selector(self, target):
         if not self.selector_touch:
