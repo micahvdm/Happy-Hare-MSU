@@ -2125,12 +2125,12 @@ class Mmu:
             ge = stepper_enable.lookup_enable(self.gear_stepper.get_name())
             ge.motor_disable(self.mmu_toolhead.get_last_move_time())
         if motor in ["all", "selector"]:
-            self._servo_move()
+            # self._servo_move()
             self.is_homed = True
-            self._set_gate_selected(self.TOOL_GATE_UNKNOWN)
-            self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
-            se = stepper_enable.lookup_enable(self.selector_stepper.get_name())
-            se.motor_disable(self.mmu_toolhead.get_last_move_time())
+            # self._set_gate_selected(self.TOOL_GATE_UNKNOWN)
+            # self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
+            # se = stepper_enable.lookup_enable(self.selector_stepper.get_name())
+            # se.motor_disable(self.mmu_toolhead.get_last_move_time())
 
 ### SERVO AND MOTOR GCODE FUNCTIONS
 
@@ -3391,7 +3391,7 @@ class Mmu:
     def _check_not_homed(self):
         if not self.is_homed:
             self._log_error("MMU is not homed")
-            return True
+            return False
         return False
 
     def _check_is_loaded(self):
