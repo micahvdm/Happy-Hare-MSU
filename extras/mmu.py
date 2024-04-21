@@ -4668,8 +4668,8 @@ class Mmu:
         self.gate_selected = self.TOOL_GATE_UNKNOWN
         self._servo_move()
         self._movequeues_wait_moves()
-        homing_state = MmuHoming(self.printer, self.mmu_toolhead)
-        homing_state.set_axes([0])
+        # homing_state = MmuHoming(self.printer, self.mmu_toolhead)
+        # homing_state.set_axes([0])
         try:
             # self.mmu_kinematics.home(homing_state)
             self.is_homed = True
