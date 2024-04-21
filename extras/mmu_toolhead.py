@@ -482,7 +482,7 @@ class MmuKinematics:
 
     def get_status(self, eventtime):
         return {
-            'selector_homed': self.limits[0][0] <= self.limits[0][1],
+            'selector_homed': self.limits[0][1] <= self.limits[0][1],
             'gear_synced_to_extruder': self.is_gear_synced_to_extruder(),
             'extruder_synced_to_gear': self.is_extruder_synced_to_gear()
         }
