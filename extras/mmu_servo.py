@@ -23,9 +23,9 @@ class MmuServo:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.printer.register_event_handler('klippy:connect', self.handle_connect)
-        self.min_width = config.getfloat('minimum_pulse_width', 0.001, above=0., below=SERVO_SIGNAL_PERIOD)
-        self.max_width = config.getfloat('maximum_pulse_width', 0.002, above=self.min_width, below=SERVO_SIGNAL_PERIOD)
-        self.max_angle = config.getfloat('maximum_servo_angle', 180.)
+        self.min_width = config.getfloat('minimum_pulse_width', 0.0005, above=0., below=SERVO_SIGNAL_PERIOD)
+        self.max_width = config.getfloat('maximum_pulse_width', 0.0024, above=self.min_width, below=SERVO_SIGNAL_PERIOD)
+        self.max_angle = config.getfloat('maximum_servo_angle', 270.)
         self.angle_to_width = (self.max_width - self.min_width) / self.max_angle
         self.width_to_value = 1. / SERVO_SIGNAL_PERIOD
         self.not_before_time = initial_pwm = 0.

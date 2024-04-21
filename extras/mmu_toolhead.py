@@ -469,15 +469,16 @@ class MmuKinematics:
         self.move_accel = accel
 
     def check_move(self, move):
-        limits = self.limits
-        xpos, ypos = move.end_pos[:2]
-        if xpos != 0. and (xpos < limits[0][0] or xpos > limits[0][1]):
-            raise move.move_error()
+        return
+        # limits = self.limits
+        # xpos, ypos = move.end_pos[:2]
+        # if xpos != 0. and (xpos < limits[0][0] or xpos > limits[0][1]):
+        #     raise move.move_error()
         
-        if move.axes_d[0]: # Selector
-            move.limit_speed(self.selector_max_velocity, self.selector_max_accel)
-        elif move.axes_d[1]: # Gear
-            move.limit_speed(self.gear_max_velocity, min(self.gear_max_accel, self.move_accel) if self.move_accel else self.gear_max_accel)
+        # if move.axes_d[0]: # Selector
+        #     move.limit_speed(self.selector_max_velocity, self.selector_max_accel)
+        # elif move.axes_d[1]: # Gear
+        #     move.limit_speed(self.gear_max_velocity, min(self.gear_max_accel, self.move_accel) if self.move_accel else self.gear_max_accel)
 
     def get_status(self, eventtime):
         return {
@@ -545,6 +546,7 @@ class MmuHoming(Homing, object):
             for axis in homing_axes:
                 homepos[axis] = newpos[axis]
             self.toolhead.set_position(homepos)
+            self.servo.set_value(angle=self.servo_angles['up'], duration=None if self.servo_active_up else self.servo_duration)
 
 
 # Extend PrinterRail to allow for multiple (switchable) endstops and to allow for no default endstop

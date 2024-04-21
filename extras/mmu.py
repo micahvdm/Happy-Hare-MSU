@@ -95,6 +95,11 @@ class Mmu:
     CALIBRATED_GATES    = 0b10000
     CALIBRATED_ALL      = 0b01111 # Calibrated gates is optional
 
+    SERVO_T0_STATE = 7
+    SERVO_T1_STATE = 6
+    SERVO_T2_STATE = 5
+    SERVO_T3_STATE = 4
+    SERVO_T4_STATE = 3
     SERVO_MOVE_STATE = 2
     SERVO_DOWN_STATE = 1
     SERVO_UP_STATE = 0
@@ -462,15 +467,30 @@ class Mmu:
         self.sync_multiplier_low = config.getfloat('sync_multipler_low', 0.95, minval=0.5, maxval=1.)
         self.sync_feedback_enable = config.getint('sync_feedback_enable', 0, minval=0, maxval=1)
 
-        # Servo control
+        # Servo control [260,220,180,140,100]
         self.servo_angles = {}
-        self.servo_angles['down'] = config.getint('servo_down_angle', 90)
-        self.servo_angles['up'] = config.getint('servo_up_angle', 90)
+        self.servo_angles['down'] = config.getint('servo_down_angle', 0)
+        self.servo_angles['up'] = config.getint('servo_up_angle', 270)
         self.servo_angles['move'] = config.getint('servo_move_angle', self.servo_angles['up'])
+        self.servo_angles['tool0'] = config.getint('servo_t0_angle', 260)
+        self.servo_angles['tool1'] = config.getint('servo_t1_angle', 220)
+        self.servo_angles['tool2'] = config.getint('servo_t2_angle', 180)
+        self.servo_angles['tool3'] = config.getint('servo_t3_angle', 140)
+        self.servo_angles['tool4'] = config.getint('servo_t4_angle', 100)
         self.servo_duration = config.getfloat('servo_duration', 0.2, minval=0.1)
         self.servo_active_down = config.getint('servo_active_down', 0, minval=0, maxval=1)
+        self.servo_active_t0 = config.getint('servo_active_t0', 0, minval=0, maxval=1)
+        self.servo_active_t1 = config.getint('servo_active_t1', 0, minval=0, maxval=1)
+        self.servo_active_t2 = config.getint('servo_active_t2', 0, minval=0, maxval=1)
+        self.servo_active_t3 = config.getint('servo_active_t3', 0, minval=0, maxval=1)
+        self.servo_active_t4 = config.getint('servo_active_t4', 0, minval=0, maxval=1)
         self.servo_dwell = config.getfloat('servo_dwell', 0.4, minval=0.1)
         self.servo_buzz_gear_on_down = config.getint('servo_buzz_gear_on_down', 3, minval=0, maxval=10)
+        self.servo_buzz_gear_on_t0 = config.getint('servo_buzz_gear_on_t0', 3, minval=0, maxval=10)
+        self.servo_buzz_gear_on_t1 = config.getint('servo_buzz_gear_on_t1', 3, minval=0, maxval=10)
+        self.servo_buzz_gear_on_t2 = config.getint('servo_buzz_gear_on_t2', 3, minval=0, maxval=10)
+        self.servo_buzz_gear_on_t3 = config.getint('servo_buzz_gear_on_t3', 3, minval=0, maxval=10)
+        self.servo_buzz_gear_on_t4 = config.getint('servo_buzz_gear_on_t4', 3, minval=0, maxval=10)
 
         # TMC current control
         self.extruder_homing_current = config.getint('extruder_homing_current', 50, minval=10, maxval=100)
@@ -503,7 +523,7 @@ class Mmu:
 
         # Optional features
         self.encoder_move_validation = config.getint('encoder_move_validation', 1, minval=0, maxval=1) # Use encoder to check load/unload movement
-        self.selector_touch_enable = config.getint('selector_touch_enable', 1, minval=0, maxval=1)
+        self.selector_touch_enable = config.getint('selector_touch_enable', 0, minval=0, maxval=1)
         self.enable_clog_detection = config.getint('enable_clog_detection', 2, minval=0, maxval=2)
         self.enable_spoolman = config.getint('enable_spoolman', 0, minval=0, maxval=1)
         self.default_enable_endless_spool = config.getint('enable_endless_spool', 0, minval=0, maxval=1)
@@ -534,7 +554,7 @@ class Mmu:
 
         # Hidden feature development
         self.homing_extruder = config.getint('homing_extruder', 1, minval=0, maxval=1) # Special MMU homing extruder or klipper default
-        self.virtual_selector = bool(config.getint('virtual_selector', 0, minval=0, maxval=1))
+        self.virtual_selector = bool(config.getint('virtual_selector', 1, minval=0, maxval=1))
 
         # The following lists are the defaults (when reset) and will be overriden by values in mmu_vars.cfg...
 
@@ -1319,6 +1339,11 @@ class Mmu:
                 'servo': "Up" if self.servo_state == self.SERVO_UP_STATE else
                          "Down" if self.servo_state == self.SERVO_DOWN_STATE else
                          "Move" if self.servo_state == self.SERVO_MOVE_STATE else
+                         "tool0" if self.servo_state == self.SERVO_T0_STATE else
+                         "tool1" if self.servo_state == self.SERVO_T1_STATE else
+                         "tool2" if self.servo_state == self.SERVO_T2_STATE else
+                         "tool3" if self.servo_state == self.SERVO_T3_STATE else
+                         "tool4" if self.servo_state == self.SERVO_T4_STATE else
                          "Unknown",
                 'ttg_map': list(self.ttg_map),
                 'gate_status': list(self.gate_status),
@@ -1814,7 +1839,13 @@ class Mmu:
         msg += " with %d gates" % (self.mmu_num_gates)
         msg += " (%s)" % ("DISABLED" if not self.is_enabled else "PAUSED" if self._is_mmu_paused() else "OPERATIONAL")
         msg += "\nServo in %s position" % ("UP" if self.servo_state == self.SERVO_UP_STATE else \
-                "DOWN" if self.servo_state == self.SERVO_DOWN_STATE else "MOVE" if self.servo_state == self.SERVO_MOVE_STATE else "unknown")
+                "DOWN" if self.servo_state == self.SERVO_DOWN_STATE else \
+                "TOOL0" if self.servo_state == self.SERVO_T0_STATE else \
+                "TOOL1" if self.servo_state == self.SERVO_T1_STATE else \
+                "TOOL2" if self.servo_state == self.SERVO_T2_STATE else \
+                "TOOL3" if self.servo_state == self.SERVO_T3_STATE else \
+                "TOOL4" if self.servo_state == self.SERVO_T4_STATE else \
+                "MOVE" if self.servo_state == self.SERVO_MOVE_STATE else "unknown")
         if self._has_encoder():
             msg += ", Encoder reads %.1fmm" % self._get_encoder_distance()
         msg += "\nPrint state is %s" % self.print_state.upper()
@@ -1968,6 +1999,81 @@ class Mmu:
         self.servo_angle = self.servo_angles['down']
         self.servo_state = self.SERVO_DOWN_STATE
 
+    def _servo_t0(self, buzz_gear=True):
+        if self.gate_selected == self.TOOL_GATE_BYPASS: return
+        if self.servo_state == self.SERVO_T0_STATE: return
+        self._log_debug("Setting servo to tool 0 (filament drive) position at angle: %d" % self.servo_angles['tool0'])
+        self._movequeues_wait_moves()
+        self.servo.set_value(angle=self.servo_angles['tool0'], duration=None if self.servo_active_t0 else self.servo_duration)
+        if self.servo_angle != self.servo_angles['tool0'] and buzz_gear and self.servo_buzz_gear_on_t0 > 0:
+            self.gear_buzz_accel = 1000
+            for i in range(self.servo_buzz_gear_on_t0):
+                self._trace_filament_move(None, 0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+                self._trace_filament_move(None, -0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+            self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
+        self.servo_angle = self.servo_angles['tool0']
+        self.servo_state = self.SERVO_T0_STATE
+
+    def _servo_t1(self, buzz_gear=True):
+        if self.gate_selected == self.TOOL_GATE_BYPASS: return
+        if self.servo_state == self.SERVO_T1_STATE: return
+        self._log_debug("Setting servo to tool 1 (filament drive) position at angle: %d" % self.servo_angles['tool1'])
+        self._movequeues_wait_moves()
+        self.servo.set_value(angle=self.servo_angles['tool1'], duration=None if self.servo_active_t1 else self.servo_duration)
+        if self.servo_angle != self.servo_angles['tool1'] and buzz_gear and self.servo_buzz_gear_on_t1 > 0:
+            self.gear_buzz_accel = 1000
+            for i in range(self.servo_buzz_gear_on_t1):
+                self._trace_filament_move(None, 0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+                self._trace_filament_move(None, -0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+            self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
+        self.servo_angle = self.servo_angles['tool1']
+        self.servo_state = self.SERVO_T1_STATE
+
+    def _servo_t2(self, buzz_gear=True):
+        if self.gate_selected == self.TOOL_GATE_BYPASS: return
+        if self.servo_state == self.SERVO_T2_STATE: return
+        self._log_debug("Setting servo to tool 2 (filament drive) position at angle: %d" % self.servo_angles['tool2'])
+        self._movequeues_wait_moves()
+        self.servo.set_value(angle=self.servo_angles['tool2'], duration=None if self.servo_active_t2 else self.servo_duration)
+        if self.servo_angle != self.servo_angles['tool2'] and buzz_gear and self.servo_buzz_gear_on_t2 > 0:
+            self.gear_buzz_accel = 1000
+            for i in range(self.servo_buzz_gear_on_t2):
+                self._trace_filament_move(None, 0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+                self._trace_filament_move(None, -0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+            self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
+        self.servo_angle = self.servo_angles['tool2']
+        self.servo_state = self.SERVO_T2_STATE
+
+    def _servo_t3(self, buzz_gear=True):
+        if self.gate_selected == self.TOOL_GATE_BYPASS: return
+        if self.servo_state == self.SERVO_T3_STATE: return
+        self._log_debug("Setting servo to tool 3 (filament drive) position at angle: %d" % self.servo_angles['tool3'])
+        self._movequeues_wait_moves()
+        self.servo.set_value(angle=self.servo_angles['tool3'], duration=None if self.servo_active_t3 else self.servo_duration)
+        if self.servo_angle != self.servo_angles['tool3'] and buzz_gear and self.servo_buzz_gear_on_t3 > 0:
+            self.gear_buzz_accel = 1000
+            for i in range(self.servo_buzz_gear_on_t3):
+                self._trace_filament_move(None, 0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+                self._trace_filament_move(None, -0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+            self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
+        self.servo_angle = self.servo_angles['tool3']
+        self.servo_state = self.SERVO_T3_STATE
+
+    def _servo_t4(self, buzz_gear=True):
+        if self.gate_selected == self.TOOL_GATE_BYPASS: return
+        if self.servo_state == self.SERVO_T4_STATE: return
+        self._log_debug("Setting servo to tool 4 (filament drive) position at angle: %d" % self.servo_angles['tool4'])
+        self._movequeues_wait_moves()
+        self.servo.set_value(angle=self.servo_angles['tool4'], duration=None if self.servo_active_t4 else self.servo_duration)
+        if self.servo_angle != self.servo_angles['tool4'] and buzz_gear and self.servo_buzz_gear_on_t4 > 0:
+            self.gear_buzz_accel = 1000
+            for i in range(self.servo_buzz_gear_on_t4):
+                self._trace_filament_move(None, 0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+                self._trace_filament_move(None, -0.8, speed=25, accel=self.gear_buzz_accel, encoder_dwell=None)
+            self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
+        self.servo_angle = self.servo_angles['tool4']
+        self.servo_state = self.SERVO_T4_STATE
+
     def _servo_move(self): # Position servo for selector movement
         if self.servo_state == self.SERVO_MOVE_STATE: return
         self._log_debug("Setting servo to move (filament hold) position at angle: %d" % self.servo_angles['move'])
@@ -2003,6 +2109,14 @@ class Mmu:
             self._servo_move()
         else:
             self._servo_up()
+
+    _select_servo = {
+    "0": _servo_t0,
+    "1": _servo_t1,
+    "2": _servo_t2,
+    "3": _servo_t3,
+    "4": _servo_t4
+    }
 
     def _motors_off(self, motor="all"):
         stepper_enable = self.printer.lookup_object('stepper_enable')
@@ -2042,6 +2156,36 @@ class Mmu:
                 self._servo_save_pos(pos)
             else:
                 self._servo_down()
+        elif pos == "tool0":
+            if self._check_in_bypass(): return
+            if save:
+                self._servo_save_pos(pos)
+            else:
+                self._servo_t0()
+        elif pos == "tool1":
+            if self._check_in_bypass(): return
+            if save:
+                self._servo_save_pos(pos)
+            else:
+                self._servo_t1()
+        elif pos == "tool2":
+            if self._check_in_bypass(): return
+            if save:
+                self._servo_save_pos(pos)
+            else:
+                self._servo_t2()
+        elif pos == "tool3":
+            if self._check_in_bypass(): return
+            if save:
+                self._servo_save_pos(pos)
+            else:
+                self._servo_t3()
+        elif pos == "tool4":
+            if self._check_in_bypass(): return
+            if save:
+                self._servo_save_pos(pos)
+            else:
+                self._servo_t4()
         elif save:
             self._log_error("Servo position not specified for save")
         elif pos == "":
@@ -3800,7 +3944,7 @@ class Mmu:
         else:
             _,homed,_,_ = self._trace_filament_move("Reverse homing to gate sensor", -homing_max, motor="gear", homing_move=-1, endstop_name=self.ENDSTOP_GATE)
             if homed:
-                self._set_filament_pos_state(self.FILAMENT_POS_HOMED_GATE)
+                self.f(self.FILAMENT_POS_HOMED_GATE)
                 # Final parking step
                 self._trace_filament_move("Final parking", -self.gate_parking_distance)
                 self._set_filament_pos_state(self.FILAMENT_POS_UNLOADED)
@@ -4519,7 +4663,7 @@ class Mmu:
                 self._select_tool(tool)
 
     def _home_selector(self):
-        self.is_homed = False
+        self.is_homed = True
         self.gate_selected = self.TOOL_GATE_UNKNOWN
         self._servo_move()
         self._movequeues_wait_moves()
@@ -4535,7 +4679,8 @@ class Mmu:
 
     def _position_selector(self, target):
         if not self.selector_touch:
-            self._trace_selector_move("Positioning selector", target)
+            # self._trace_selector_move("Positioning selector", target)
+            self._select_servo[target]()
         else:
             init_pos = self.mmu_toolhead.get_position()[0]
             halt_pos, successful = self._attempt_selector_touch_move(target)
@@ -5268,10 +5413,10 @@ class Mmu:
         with self._wrap_action(self.ACTION_SELECTING):
             self._servo_move()
             if gate == self.TOOL_GATE_BYPASS:
-                offset = self.bypass_offset
+                self.servo.set_value(angle=self.servo_angles['up'], duration=None if self.servo_active_up else self.servo_duration)
             else:
                 offset = self.selector_offsets[gate]
-            self._position_selector(offset)
+            self._position_selector(gate)
             self._set_gate_selected(gate)
 
     def _set_gate_selected(self, gate):
