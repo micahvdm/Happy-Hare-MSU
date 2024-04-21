@@ -1008,7 +1008,7 @@ class Mmu:
 
     def _initialize_state(self):
         self.is_enabled = self.runout_enabled = True
-        self.is_homed = self.is_handling_runout = self.calibrating = False
+        self.is_homed = self.is_handling_runout = self.calibrating = True
         self.last_print_stats = self.paused_extruder_temp = self.reason_for_pause = None
         self.tool_selected = self._next_tool = self.TOOL_GATE_UNKNOWN
         self._last_toolchange = "Unknown"
@@ -1158,7 +1158,7 @@ class Mmu:
                 elif self.gate_selected == self.TOOL_GATE_BYPASS:
                     self._set_selector_pos(self.bypass_offset)
                 elif self.gate_selected == self.TOOL_GATE_UNKNOWN:
-                    self.is_homed = False
+                    self.is_homed = True
             else:
                 errors.append("Incorrect number of gates specified in %s or %s" % (self.VARS_MMU_TOOL_SELECTED, self.VARS_MMU_GATE_SELECTED))
 
@@ -2126,7 +2126,7 @@ class Mmu:
             ge.motor_disable(self.mmu_toolhead.get_last_move_time())
         if motor in ["all", "selector"]:
             self._servo_move()
-            self.is_homed = False
+            self.is_homed = True
             self._set_gate_selected(self.TOOL_GATE_UNKNOWN)
             self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
             se = stepper_enable.lookup_enable(self.selector_stepper.get_name())
@@ -4711,7 +4711,7 @@ class Mmu:
                     successful, halt_pos = self._attempt_selector_touch_move(target)
                     if not successful:
                         # Selector path is still blocked
-                        self.is_homed = False
+                        self.is_homed = True
                         self._unselect_tool()
                         raise MmuError("Selector recovery failed. Path is probably internally blocked")
                 else: # Selector path is blocked, probably not internally
