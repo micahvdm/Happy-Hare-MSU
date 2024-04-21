@@ -4659,7 +4659,7 @@ class Mmu:
 
             self._unselect_tool()
             self.is_homed = True
-            self._home_selector()
+            # self._home_selector()
             if tool >= 0:
                 self._select_tool(tool)
 
