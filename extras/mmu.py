@@ -5551,7 +5551,7 @@ class Mmu:
         self._log_to_file(gcmd.get_commandline())
         if self._check_is_disabled(): return
         if self._check_in_bypass(): return
-        if self._check_is_calibrated(): return
+        # if self._check_is_calibrated(): return
         self.last_statistics = {}
         self._fix_started_state()
 
