@@ -554,7 +554,7 @@ class Mmu:
 
         # Hidden feature development
         self.homing_extruder = config.getint('homing_extruder', 1, minval=0, maxval=1) # Special MMU homing extruder or klipper default
-        self.virtual_selector = bool(config.getint('virtual_selector', 1, minval=0, maxval=1))
+        self.virtual_selector = bool(config.getint('virtual_selector', 0, minval=0, maxval=1))
 
         # The following lists are the defaults (when reset) and will be overriden by values in mmu_vars.cfg...
 
