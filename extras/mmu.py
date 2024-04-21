@@ -3870,8 +3870,8 @@ class Mmu:
                         self._log_debug("Error loading filament - not enough detected at encoder. %s" % ("Retrying..." if i < retries - 1 else ""))
                         if i < retries - 1:
                             self._track_gate_statistics('servo_retries', self.gate_selected)
-                            self._servo_up()
-                            self._servo_down()
+                            # self._servo_up()
+                            # self._servo_down()
         else:
             for i in range(retries):
                 msg = "Initial homing to gate sensor" if i == 0 else ("Retry homing to gate sensor #%d" % i)
@@ -3886,8 +3886,8 @@ class Mmu:
                     self._log_debug("Error loading filament - did not find home. %s" % ("Retrying..." if i < retries - 1 else ""))
                     if i < retries - 1:
                         self._track_gate_statistics('servo_retries', self.gate_selected)
-                        self._servo_up()
-                        self._servo_down()
+                        # self._servo_up()
+                        # self._servo_down()
 
         self._set_gate_status(self.gate_selected, self.GATE_EMPTY)
         self._set_filament_pos_state(self.FILAMENT_POS_UNLOADED)
@@ -4148,11 +4148,11 @@ class Mmu:
 
             synced = not extruder_only
             if synced:
-                self._servo_down()
+                # self._servo_down()
                 speed = self.extruder_sync_load_speed
                 motor = "gear+extruder"
             else:
-                self._servo_up()
+                # self._servo_up()
                 speed = self.extruder_load_speed
                 motor = "extruder"
 
@@ -4203,11 +4203,11 @@ class Mmu:
 
             synced = self.servo_state == self.SERVO_DOWN_STATE and not extruder_only
             if synced:
-                self._servo_down()
+                # self._servo_down()
                 speed = self.extruder_sync_unload_speed
                 motor = "gear+extruder"
             else:
-                self._servo_up()
+                # self._servo_up()
                 speed = self.extruder_unload_speed
                 motor = "extruder"
 
@@ -4215,7 +4215,7 @@ class Mmu:
             if self._has_sensor(self.ENDSTOP_EXTRUDER) and not extruder_only:
                 # BEST Strategy: Extruder exit movement leveraging extruder entry sensor. Must be synced
                 synced = True
-                self._servo_down()
+                # self._servo_down()
                 speed = self.extruder_sync_unload_speed
                 motor = "gear+extruder"
 
@@ -4361,7 +4361,8 @@ class Mmu:
             if not extruder_only:
                 self._set_action(current_action)
             if not self._is_printing():
-                self._servo_up()
+                self._log_debug("")
+                # self._servo_up()
 
     def _unload_sequence(self, length=None, check_state=False, skip_tip=False, extruder_only=False, runout=False):
         self._movequeues_wait_moves()
@@ -4454,7 +4455,8 @@ class Mmu:
                     self._set_filament_pos_state(self.FILAMENT_POS_UNKNOWN)
                     raise MmuError("It may be time to get the pliers out! Filament appears to stuck somewhere")
             else:
-                self._servo_up()
+                self._log_debug("")
+                # self._servo_up()
 
             msg = "Unload of %.1fmm filament successful" % self._get_filament_position()
             if self._can_use_encoder():
@@ -4506,7 +4508,7 @@ class Mmu:
             self._log_debug("Testing for filament in extruder by retracting on extruder stepper only")
             if not length:
                 length = self.encoder_move_step_size
-            self._servo_up()
+            # self._servo_up()
             _,_,measured,_ = self._trace_filament_move("Moving extruder to test for filament exit", -length, speed=self.extruder_unload_speed, motor="extruder")
             detected = measured > self.encoder_min
             self._log_debug("Filament %s in extruder" % ("detected" if detected else "not detected"))
@@ -5065,7 +5067,7 @@ class Mmu:
         if self._has_encoder():
             self._log_debug("Checking for possibility of filament still in extruder gears...")
             self._ensure_safe_extruder_temperature(wait=False)
-            self._servo_up()
+            # self._servo_up()
             length = self.encoder_move_step_size
             _,_,measured,_ = self._trace_filament_move("Checking extruder", -length, speed=self.extruder_unload_speed, motor="extruder")
             detected = measured > self.encoder_min
@@ -5185,9 +5187,11 @@ class Mmu:
         if motor not in ["gear", "extruder", "gear+extruder", "synced", "both"]:
             raise gcmd.error("Valid motor names are 'gear', 'extruder', 'gear+extruder', 'synced' or 'both'")
         if motor == "extruder":
-            self._servo_up()
+            self._log_debug("")
+            # self._servo_up()
         else:
-            self._servo_down()
+            self._log_debug("")
+            # self._servo_down()
         self._log_debug("Moving '%s' motor %.1fmm..." % (motor, move))
         return self._trace_filament_move(trace_str, move, speed=speed, accel=accel, motor=motor, sync=sync, wait=wait)
 
@@ -5210,9 +5214,11 @@ class Mmu:
         if self.gear_rail.is_endstop_virtual(endstop) and stop_on_endstop == -1:
             raise gcmd.error("Cannot reverse home on virtual (TMC stallguard) endstop '%s'" % endstop)
         if motor == "extruder":
-            self._servo_up()
+            self._log_debug("")
+            # self._servo_up()
         else:
-            self._servo_down()
+            self._log_debug("")
+            # self._servo_down()
             if self.gear_rail.is_endstop_virtual(endstop):
                 self._movequeues_dwell(1, toolhead=False) # TMC needs time to settle after gear buzz for servo
         self._log_debug("Homing '%s' motor to '%s' endstop, up to %.1fmm..." % (motor, endstop, move))
