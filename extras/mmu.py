@@ -5293,6 +5293,7 @@ class Mmu:
 
         with self._wrap_track_time('pre_load'):
             self._wrap_gcode_command(self.pre_load_macro, exception=True)
+        self._select_servo(tool)
         self._select_tool(tool, move_servo=False)
         self._update_filaments_from_spoolman(gate) # Request update of material & color from Spoolman
         self._load_sequence()
@@ -5344,8 +5345,8 @@ class Mmu:
 
         # Check TTG map. We might be mapped to same gate
         if self.ttg_map[tool] == self.gate_selected and self.filament_pos == self.FILAMENT_POS_LOADED:
-            self._select_tool(tool)
             self._select_servo(tool)
+            self._select_tool(tool)
             self.gcode.run_script_from_command("M117 T%s" % tool)
             return False
 
@@ -5394,9 +5395,9 @@ class Mmu:
             return
 
         self._log_debug("Selecting tool T%d on Gate %d..." % (tool, gate))
+        self._select_servo(tool)
         self._select_gate(gate)
         self._set_tool_selected(tool)
-        self._select_servo(tool)
         # if move_servo:
         #     self._log_debug("")
         #     # self._servo_auto()
