@@ -453,17 +453,18 @@ class MmuKinematics:
         for axis in homing_state.get_axes():
             if not axis == 0: # Saftey: Only selector (axis[0]) can be homed
                 continue
-            rail = self.rails[axis]
-            position_min, position_max = rail.get_range()
-            hi = rail.get_homing_info()
-            homepos = [None, None, None, None]
-            homepos[axis] = hi.position_endstop
-            forcepos = list(homepos)
-            if hi.positive_dir:
-                forcepos[axis] -= 1.5 * (hi.position_endstop - position_min)
-            else:
-                forcepos[axis] += 1.5 * (position_max - hi.position_endstop)
-            homing_state.home_rails([rail], forcepos, homepos) # Perform homing
+            self.is_homed = True
+            # rail = self.rails[axis]
+            # position_min, position_max = rail.get_range()
+            # hi = rail.get_homing_info()
+            # homepos = [None, None, None, None]
+            # homepos[axis] = hi.position_endstop
+            # forcepos = list(homepos)
+            # if hi.positive_dir:
+            #     forcepos[axis] -= 1.5 * (hi.position_endstop - position_min)
+            # else:
+            #     forcepos[axis] += 1.5 * (position_max - hi.position_endstop)
+            # homing_state.home_rails([rail], forcepos, homepos) # Perform homing
 
     def set_accel_limit(self, accel):
         self.move_accel = accel
