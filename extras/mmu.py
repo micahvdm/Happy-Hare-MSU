@@ -5594,6 +5594,7 @@ class Mmu:
                 for i in range(attempts):
                     try:
                         if self._change_tool(tool, skip_tip, next_pos):
+                            self._select_servo(tool)
                             self._dump_statistics(job=not quiet, gate=not quiet)
                         continue
                     except MmuError as ee:
