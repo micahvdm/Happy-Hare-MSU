@@ -2110,13 +2110,9 @@ class Mmu:
         else:
             self._servo_up()
 
-    _select_servo = {
-    0: _servo_t0,
-    1: _servo_t1,
-    2: _servo_t2,
-    3: _servo_t3,
-    4: _servo_t4
-    }
+    def _select_servo(self, key):
+        servo_select = {0: self._servo_t0, 1: self._servo_t1, 2: self._servo_t2, 3: self._servo_t3, 4: self._servo_t4}
+        return servo_select
 
     def _motors_off(self, motor="all"):
         stepper_enable = self.printer.lookup_object('stepper_enable')
