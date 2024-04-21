@@ -5414,7 +5414,7 @@ class Mmu:
         with self._wrap_action(self.ACTION_SELECTING):
             self._servo_move()
             if gate == self.TOOL_GATE_BYPASS:
-                self.servo.set_value(angle=self.servo_angles['up'], duration=None if self.servo_active_up else self.servo_duration)
+                self.servo.set_value(angle=self.servo_angles['up'], duration=self.servo_duration)
             else:
                 offset = self.selector_offsets[gate]
             self._position_selector(gate)
