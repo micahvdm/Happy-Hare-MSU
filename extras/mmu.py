@@ -2230,12 +2230,12 @@ class Mmu:
             self.servo.set_value(angle=abs(mid+large)/2, duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_duration, 0.5), mmu_toolhead=False)
             self._movequeues_wait_moves()
-            if old_state == self.SERVO_DOWN_STATE:
-                self._servo_down(buzz_gear=False)
-            elif old_state == self.SERVO_MOVE_STATE:
-                self._servo_move()
-            else:
-                self._servo_up()
+            # if old_state == self.SERVO_DOWN_STATE:
+            #     self._servo_down(buzz_gear=False)
+            # elif old_state == self.SERVO_MOVE_STATE:
+            #     self._servo_move()
+            # else:
+            #     self._servo_up()
         else:
             raise gcmd.error("Motor '%s' not known" % motor)
 
@@ -2396,7 +2396,7 @@ class Mmu:
             raise MmuError("Calibration of bowden length (on Gate 0) failed. Aborting, because:\n%s" % str(ee))
         finally:
             self.extruder_homing_endstop = endstop
-            self._servo_auto()
+            # self._servo_auto()
 
     def _calibrate_bowden_length_manual(self, approx_bowden_length, save=True):
         if self.gate_selected != 0 and not self.virtual_selector:
@@ -2404,7 +2404,7 @@ class Mmu:
         try:
             self._log_always("Calibrating bowden length (manual method) using %s as gate reference point" % self._gate_homing_string())
             self._set_filament_direction(self.DIRECTION_UNLOAD)
-            self._servo_down()
+            # self._servo_down()
             self._set_gate_ratio(1.)
             self._log_always("Finding gate position...")
             actual,homed,measured,_ = self._trace_filament_move("Reverse homing to gate sensor", -approx_bowden_length, motor="gear", homing_move=-1, endstop_name=self.ENDSTOP_GATE)
@@ -2419,7 +2419,8 @@ class Mmu:
             else:
                 raise MmuError("Calibration of bowden length failed. Did not home to gate sensor after moving %.1fmm" % approx_bowden_length)
         finally:
-            self._servo_auto()
+            self._log_debug("")
+            # self._servo_auto()
 
     def _calibrate_gate(self, gate, length, repeats, save=True):
         try:
@@ -2464,7 +2465,8 @@ class Mmu:
             # Add some more context to the error and re-raise
             raise MmuError("Calibration for Gate %d failed. Aborting, because: %s" % (gate, str(ee)))
         finally:
-            self._servo_auto()
+            self._log_debug("")
+            # self._servo_auto()
 
     def _get_max_selector_movement(self, gate=-1):
         n = gate if gate >= 0 else self.mmu_num_gates - 1
@@ -2675,7 +2677,7 @@ class Mmu:
         max_speed = gcmd.get_float('MAXSPEED', speed, above=0.)
         save = gcmd.get_int('SAVE', 1, minval=0, maxval=1)
         try:
-            self._servo_down()
+            # self._servo_down()
             self.calibrating = True
             with self._require_encoder():
                 self._calibrate_encoder(length, repeats, speed, min_speed, max_speed, accel, save)
@@ -3851,7 +3853,7 @@ class Mmu:
     def _load_gate(self, allow_retry=True, adjust_servo_on_error=True):
         self._validate_gate_config("load")
         self._set_filament_direction(self.DIRECTION_LOAD)
-        self._servo_down()
+        # self._servo_down()
         retries = self.gate_load_retries if allow_retry else 1
 
         if self.gate_homing_endstop == self.ENDSTOP_ENCODER:
@@ -3892,7 +3894,8 @@ class Mmu:
         self._set_gate_status(self.gate_selected, self.GATE_EMPTY)
         self._set_filament_pos_state(self.FILAMENT_POS_UNLOADED)
         if adjust_servo_on_error:
-            self._servo_auto()
+            self._log_debug("")
+            # self._servo_auto()
         if self.gate_homing_endstop == self.ENDSTOP_ENCODER:
             raise MmuError("Error loading filament at gate - not enough movement detected at encoder")
         else:
@@ -3904,7 +3907,7 @@ class Mmu:
     def _unload_gate(self, homing_max=None):
         self._validate_gate_config("unload")
         self._set_filament_direction(self.DIRECTION_UNLOAD)
-        self._servo_down()
+        # self._servo_down()
         full = homing_max == self.calibrated_bowden_length
         homing_max = homing_max or self.gate_homing_max
 
@@ -3972,7 +3975,7 @@ class Mmu:
 
         self._log_debug("Loading bowden tube")
         self._set_filament_direction(self.DIRECTION_LOAD)
-        self._servo_down()
+        # self._servo_down()
         tolerance = self.bowden_allowable_load_delta
 
         # See if we need to automatically set calibration ratio for this gate
@@ -4038,7 +4041,7 @@ class Mmu:
 
         self._log_debug("Unloading bowden tube")
         self._set_filament_direction(self.DIRECTION_UNLOAD)
-        self._servo_down()
+        # self._servo_down()
         tolerance = self.bowden_allowable_unload_delta
 
         # Optional safety step
@@ -4072,7 +4075,7 @@ class Mmu:
     # Optionally home filament to designated homing location at the extruder
     def _home_to_extruder(self, max_length):
         self._set_filament_direction(self.DIRECTION_LOAD)
-        self._servo_down()
+        # self._servo_down()
         measured = 0
 
         if self.extruder_homing_endstop == self.ENDSTOP_EXTRUDER_COLLISION:
@@ -4377,7 +4380,7 @@ class Mmu:
 
         if self.filament_pos == self.FILAMENT_POS_UNLOADED:
             self._log_debug("Filament already ejected")
-            self._servo_auto()
+            # self._servo_auto()
             return
 
         try:
@@ -5039,7 +5042,7 @@ class Mmu:
             self._log_debug("Filament detected by sensors: %s" % ', '.join([key for key, value in self._check_all_sensors().items() if value]))
             return True
         elif not self._has_sensor(self.ENDSTOP_GATE) and self._has_encoder():
-            self._servo_down()
+            # self._servo_down()
             found = self._buzz_gear_motor()
             self._log_debug("Filament %s in encoder after buzzing gear motor" % ("detected" if found else "not detected"))
             return found
@@ -5054,7 +5057,7 @@ class Mmu:
             self._log_debug("Filament %s by gate sensor" % "detected" if detected else "not detected")
             return detected
         elif self._has_encoder():
-            self._servo_down()
+            # self._servo_down()
             found = self._buzz_gear_motor()
             self._log_debug("Filament %s in encoder after buzzing gear motor" % ("detected" if found else "not detected"))
             return found
@@ -5097,9 +5100,11 @@ class Mmu:
         prev_sync_state = self.mmu_toolhead.is_gear_synced_to_extruder()
         if servo:
             if sync:
-                self._servo_down()
+                self._log_debug("")
+                # self._servo_down()
             else:
-                self._servo_auto()
+                self._log_debug("")
+                # self._servo_auto()
         if prev_sync_state != sync:
             self._log_debug("%s gear stepper and extruder" % ("Syncing" if sync else "Unsyncing"))
             self.mmu_toolhead.sync_gear_to_extruder(self.extruder_name if sync else None)
@@ -5376,7 +5381,7 @@ class Mmu:
 
     def _unselect_tool(self):
         self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
-        self._servo_auto()
+        # self._servo_auto()
 
     def _select_tool(self, tool, move_servo=True):
         if tool < 0 or tool >= self.mmu_num_gates:
@@ -5390,8 +5395,9 @@ class Mmu:
         self._log_debug("Selecting tool T%d on Gate %d..." % (tool, gate))
         self._select_gate(gate)
         self._set_tool_selected(tool)
-        if move_servo:
-            self._servo_auto()
+        # if move_servo:
+        #     self._log_debug("")
+        #     # self._servo_auto()
         self._log_info("Tool T%d enabled%s" % (tool, (" on Gate %d" % gate) if tool != gate else ""))
 
     def _select_bypass(self):
@@ -5546,7 +5552,8 @@ class Mmu:
         except MmuError as ee:
             self._mmu_pause(str(ee))
         finally:
-            self._servo_auto()
+            self._log_debug("")
+            # self._servo_auto()
 
     cmd_MMU_CHANGE_TOOL_help = "Perform a tool swap (called from Tx command)"
     def cmd_MMU_CHANGE_TOOL(self, gcmd):
@@ -5784,7 +5791,7 @@ class Mmu:
             self._log_info("Warning: Making assumption that bypass is unloaded")
             self.filament_direction = self.DIRECTION_UNKNOWN
             self._set_filament_pos_state(self.FILAMENT_POS_UNLOADED, silent=True)
-            self._servo_auto()
+            # self._servo_auto()
             return
 
         if loaded == 1:
@@ -5798,7 +5805,7 @@ class Mmu:
 
         # Filament position not specified so auto recover
         self._recover_filament_pos(strict=strict, message=True)
-        self._servo_auto()
+        # self._servo_auto()
 
 
 ### GCODE COMMANDS INTENDED FOR TESTING #####################################
@@ -5824,8 +5831,8 @@ class Mmu:
                         self._home(tool)
                     else:
                         self._select_tool(tool, move_servo=servo)
-                if servo:
-                    self._servo_down()
+                # if servo:
+                #     self._servo_down()
         except MmuError as ee:
             self._log_error("Soaktest abandoned because of error")
             self._log_always(str(ee))
@@ -5869,7 +5876,7 @@ class Mmu:
         self._log_to_file(gcmd.get_commandline())
         if self._check_is_disabled(): return
         if self._check_in_bypass(): return
-        self._servo_down()
+        # self._servo_down()
         self._motors_off(motor="gear")
 
     cmd_MMU_TEST_TRACKING_help = "Test the tracking of gear feed and encoder sensing"
@@ -6850,7 +6857,8 @@ class Mmu:
                     if not quiet:
                         self._log_info(self._ttg_map_to_string(summary=True))
                 finally:
-                    self._servo_auto()
+                    self._log_debug("")
+                    # self._servo_auto()
 
     cmd_MMU_PRELOAD_help = "Preloads filament at specified or current gate"
     def cmd_MMU_PRELOAD(self, gcmd):
@@ -6890,7 +6898,7 @@ class Mmu:
                 self._log_always("Filament preload for Gate %d failed: %s" % (gate, str(ee)))
             finally:
                 self.calibrating = False
-                self._servo_auto()
+                # self._servo_auto()
 
 def load_config(config):
     return Mmu(config)
