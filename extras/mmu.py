@@ -4671,7 +4671,7 @@ class Mmu:
         homing_state = MmuHoming(self.printer, self.mmu_toolhead)
         homing_state.set_axes([0])
         try:
-            self.mmu_kinematics.home(homing_state)
+            # self.mmu_kinematics.home(homing_state)
             self.is_homed = True
         except Exception as e: # Homing failed
             self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
