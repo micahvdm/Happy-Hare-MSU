@@ -5594,7 +5594,7 @@ class Mmu:
             try:
                 for i in range(attempts):
                     try:
-                        self._select_servo(self._next_tool)
+                        self._select_servo(tool)
                         if self._change_tool(tool, skip_tip, next_pos):
                             self._dump_statistics(job=not quiet, gate=not quiet)
                         continue
