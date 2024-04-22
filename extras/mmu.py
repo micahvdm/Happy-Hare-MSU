@@ -5296,8 +5296,8 @@ class Mmu:
 
         with self._wrap_track_time('pre_load'):
             self._wrap_gcode_command(self.pre_load_macro, exception=True)
-        self._select_servo(tool)
-        self._select_tool(tool, move_servo=False)
+        self.servo.set_value(angle=self.selector_offset(tool))
+        self._select_tool(tool, move_servo=True)
         self._update_filaments_from_spoolman(gate) # Request update of material & color from Spoolman
         self._load_sequence()
         self._spoolman_activate_spool(self.gate_spool_id[gate]) # Activate the spool in Spoolman
@@ -5348,7 +5348,7 @@ class Mmu:
 
         # Check TTG map. We might be mapped to same gate
         if self.ttg_map[tool] == self.gate_selected and self.filament_pos == self.FILAMENT_POS_LOADED:
-            self._select_servo(tool)
+            self.servo.set_value(angle=self.selector_offset(tool))
             self._select_tool(tool)
             self.gcode.run_script_from_command("M117 T%s" % tool)
             return False
@@ -5398,8 +5398,7 @@ class Mmu:
             return
 
         self._log_debug("Selecting tool T%d on Gate %d..." % (tool, gate))
-        self._select_servo(tool)
-        self._select_servo(gate)
+        self.servo.set_value(angle=self.selector_offset(tool))
         self._select_gate(gate)
         self._set_tool_selected(tool)
         # if move_servo:
@@ -5432,7 +5431,6 @@ class Mmu:
             if gate == self.TOOL_GATE_BYPASS:
                 self.servo.set_value(angle=self.servo_angles['down'], duration=self.servo_duration)
             else:
-                self._select_servo(gate)
                 offset = self.selector_offsets[gate]
                 self.servo.set_value(angle=offset)
             self._position_selector(gate)
@@ -5556,6 +5554,7 @@ class Mmu:
                     for tool in range(len(self.ttg_map)):
                         if self.ttg_map[tool] == gate:
                             self._select_tool(tool)
+                            self.servo.set_value(angle=self.selector_offset(tool))
                             break
                     else:
                         self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
