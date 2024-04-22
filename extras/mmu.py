@@ -4682,7 +4682,7 @@ class Mmu:
 
     def _position_selector(self, target):
         if not self.selector_touch:
-            # self._trace_selector_move("Positioning selector", target)
+            self._trace_selector_move("Positioning selector", target)
             self._select_servo(target)
         else:
             init_pos = self.mmu_toolhead.get_position()[0]
@@ -5434,6 +5434,7 @@ class Mmu:
             else:
                 self._select_servo(gate)
                 offset = self.selector_offsets[gate]
+                self.servo.set_value(angle=offset)
             self._position_selector(gate)
             self._set_gate_selected(gate)
 
@@ -5601,6 +5602,7 @@ class Mmu:
                     try:
                         if self._change_tool(tool, skip_tip, next_pos):
                             self._select_servo(tool)
+                            self.servo.set_value(next_pos)
                             self._dump_statistics(job=not quiet, gate=not quiet)
                         continue
                     except MmuError as ee:
