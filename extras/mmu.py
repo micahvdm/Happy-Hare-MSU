@@ -3909,7 +3909,7 @@ class Mmu:
     def _unload_gate(self, homing_max=None):
         self._validate_gate_config("unload")
         self._set_filament_direction(self.DIRECTION_UNLOAD)
-        # self._servo_down()
+        self.servo.set_value(angle=self.selector_offsets[self.gate_selected])
         full = homing_max == self.calibrated_bowden_length
         homing_max = homing_max or self.gate_homing_max
 
