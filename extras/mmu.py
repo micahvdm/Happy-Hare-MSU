@@ -1156,6 +1156,7 @@ class Mmu:
                 self._set_gate_selected(gate_selected)
                 self._ensure_ttg_match() # Ensure tool/gate consistency
                 if self.gate_selected >= 0:
+                    self.servo.set_value(angle=self.selector_offsets[self.gate_selected])
                     self._set_selector_pos(self.selector_offsets[self.gate_selected])
                 elif self.gate_selected == self.TOOL_GATE_BYPASS:
                     self._set_selector_pos(self.bypass_offset)
@@ -5296,7 +5297,7 @@ class Mmu:
 
         with self._wrap_track_time('pre_load'):
             self._wrap_gcode_command(self.pre_load_macro, exception=True)
-        self.servo.set_value(angle=self.selector_offset(tool))
+        self.servo.set_value(angle=self.selector_offsets[tool])
         self._select_tool(tool, move_servo=True)
         self._update_filaments_from_spoolman(gate) # Request update of material & color from Spoolman
         self._load_sequence()
@@ -5348,7 +5349,7 @@ class Mmu:
 
         # Check TTG map. We might be mapped to same gate
         if self.ttg_map[tool] == self.gate_selected and self.filament_pos == self.FILAMENT_POS_LOADED:
-            self.servo.set_value(angle=self.selector_offset(tool))
+            self.servo.set_value(angle=self.selector_offsets[tool])
             self._select_tool(tool)
             self.gcode.run_script_from_command("M117 T%s" % tool)
             return False
@@ -5398,7 +5399,7 @@ class Mmu:
             return
 
         self._log_debug("Selecting tool T%d on Gate %d..." % (tool, gate))
-        self.servo.set_value(angle=self.selector_offset(tool))
+        self.servo.set_value(angle=self.selector_offsets[tool])
         self._select_gate(gate)
         self._set_tool_selected(tool)
         # if move_servo:
@@ -5554,7 +5555,7 @@ class Mmu:
                     for tool in range(len(self.ttg_map)):
                         if self.ttg_map[tool] == gate:
                             self._select_tool(tool)
-                            self.servo.set_value(angle=self.selector_offset(tool))
+                            self.servo.set_value(angle=self.selector_offset[tool])
                             break
                     else:
                         self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
