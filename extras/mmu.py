@@ -555,7 +555,7 @@ class Mmu:
 
         # Hidden feature development
         self.homing_extruder = config.getint('homing_extruder', 1, minval=0, maxval=1) # Special MMU homing extruder or klipper default
-        self.virtual_selector = bool(config.getint('virtual_selector', 0, minval=0, maxval=1))
+        self.virtual_selector = bool(config.getint('virtual_selector', 1, minval=0, maxval=1))
 
         # The following lists are the defaults (when reset) and will be overriden by values in mmu_vars.cfg...
 
@@ -5385,7 +5385,7 @@ class Mmu:
         self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
         # self._servo_auto()
 
-    def _select_tool(self, tool, move_servo=True):
+    def _select_tool(self, tool, move_servo=False):
         if tool < 0 or tool >= self.mmu_num_gates:
             self._log_always("Tool %d does not exist" % tool)
             return
@@ -5396,6 +5396,7 @@ class Mmu:
 
         self._log_debug("Selecting tool T%d on Gate %d..." % (tool, gate))
         self._select_servo(tool)
+        self._select_servo(gate)
         self._select_gate(gate)
         self._set_tool_selected(tool)
         # if move_servo:
@@ -5418,6 +5419,7 @@ class Mmu:
         if gate == self.gate_selected: return
 
         if self.virtual_selector:
+            self._select_servo(gate)
             self.mmu_toolhead.select_gear_stepper(gate)
             self._set_gate_selected(gate)
             return
@@ -5594,8 +5596,8 @@ class Mmu:
             try:
                 for i in range(attempts):
                     try:
-                        self._select_servo(tool)
                         if self._change_tool(tool, skip_tip, next_pos):
+                            self._select_servo(tool)
                             self._dump_statistics(job=not quiet, gate=not quiet)
                         continue
                     except MmuError as ee:
