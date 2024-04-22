@@ -756,7 +756,8 @@ class Mmu:
                     mcu_endstop.add_stepper(self.mmu_extruder_stepper.stepper)
 
         # Get servo and (optional) encoder setup -----
-        self.servo = self.printer.lookup_object('mmu_servo mmu_servo', None)
+        # self.servo = self.printer.lookup_object('mmu_servo mmu_servo', None)
+        self.servo = self.printer.load_object(self.config, 'mmu_servo mmu_servo', None)
         if not self.servo:
             raise self.config.error("No [mmu_servo] definition found in mmu_hardware.cfg")
         self.encoder_sensor = self.printer.lookup_object('mmu_encoder mmu_encoder', None)
@@ -4785,6 +4786,7 @@ class Mmu:
             if self._log_enabled(self.LOG_STEPPER):
                 self._log_stepper("SELECTOR: position=%.1f, speed=%.1f, accel=%.1f" % (new_pos, speed, accel))
             pos[0] = new_pos
+            self.servo.set_value(angle=pos)
             self.mmu_toolhead.move(pos, speed)
             if wait:
                 self._movequeues_wait_moves(toolhead=False)
@@ -4795,6 +4797,7 @@ class Mmu:
     def _set_selector_pos(self, new_pos):
         pos = self.mmu_toolhead.get_position()
         pos[0] = new_pos
+        self.servo.set_value(angle=pos)
         self.mmu_toolhead.set_position(pos, homing_axes=(0,))
         self.is_homed = True
         stepper_enable = self.printer.lookup_object('stepper_enable')
@@ -5792,6 +5795,7 @@ class Mmu:
             if gate >= 0:
                 self._remap_tool(tool, gate, loaded)
                 self._set_gate_selected(gate)
+                self._select_servo(gate)
                 self._set_selector_pos(self.selector_offsets[self.gate_selected]) # In case selector stepper was turned off
         elif tool == self.TOOL_GATE_UNKNOWN and self.tool_selected == self.TOOL_GATE_BYPASS and loaded == -1:
             # This is to be able to get out of "stuck in bypass" state
