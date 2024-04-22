@@ -5420,7 +5420,7 @@ class Mmu:
 
         if self.virtual_selector:
             self._select_servo(gate)
-            self.mmu_toolhead.select_gear_stepper(gate)
+            self.mmu_toolhead.select_gear_stepper(0)
             self._set_gate_selected(gate)
             return
 
