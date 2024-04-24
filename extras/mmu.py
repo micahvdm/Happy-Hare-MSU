@@ -5459,9 +5459,8 @@ class Mmu:
             else:
                 offset = self.selector_offsets[gate]
                 if self.servo_selector:
-                    offset = self.servo_offsets[gate]
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=offset)
+                    self.servo.set_value(angle=self.servo_offsets[gate], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             self._position_selector(offset)
             self._set_gate_selected(gate)
