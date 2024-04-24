@@ -1196,7 +1196,12 @@ class Mmu:
             if self._has_encoder():
                 self.encoder_sensor.set_clog_detection_length(self.variables.get(self.VARS_MMU_CALIB_CLOG_LENGTH, 15))
                 self._disable_runout() # Initially disable clog/runout detection
-            self._servo_down()
+            if self.servo_selector:
+                self._movequeues_wait_moves()
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
+                self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
+            else:
+                self._servo_down()
             self.gate_status = self._validate_gate_status(self.gate_status) # Delay to allow for correct initial state
             self._update_filaments_from_spoolman()
         except Exception as e:
@@ -5455,7 +5460,7 @@ class Mmu:
                 offset = self.bypass_offset
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=0)
+                    self.servo.set_value(angle=0, duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 offset = self.selector_offsets[gate]
