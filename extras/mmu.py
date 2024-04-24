@@ -1196,7 +1196,7 @@ class Mmu:
             if self._has_encoder():
                 self.encoder_sensor.set_clog_detection_length(self.variables.get(self.VARS_MMU_CALIB_CLOG_LENGTH, 15))
                 self._disable_runout() # Initially disable clog/runout detection
-            self._servo_move()
+            self._servo_down()
             self.gate_status = self._validate_gate_status(self.gate_status) # Delay to allow for correct initial state
             self._update_filaments_from_spoolman()
         except Exception as e:
@@ -2282,12 +2282,12 @@ class Mmu:
         try:
             self._log_always("Calibrating bowden length (manual method) using %s as gate reference point" % self._gate_homing_string())
             self._set_filament_direction(self.DIRECTION_UNLOAD)
-            if not self.servo_selector:
-                self._servo_down()
             if self.servo_selector:
                 self._movequeues_wait_moves()
                 self.servo.set_value(angle=260)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
+            else:
+                self._servo_down()
             self._set_gate_ratio(1.)
             self._log_always("Finding gate position...")
             actual,homed,measured,_ = self._trace_filament_move("Reverse homing to gate sensor", -approx_bowden_length, motor="gear", homing_move=-1, endstop_name=self.ENDSTOP_GATE)
@@ -2302,8 +2302,7 @@ class Mmu:
             else:
                 raise MmuError("Calibration of bowden length failed. Did not home to gate sensor after moving %.1fmm" % approx_bowden_length)
         finally:
-            if not self.servo_selector:
-                self._servo_auto()
+            self._servo_auto()
 
     def _calibrate_gate(self, gate, length, repeats, save=True):
         try:
@@ -2348,8 +2347,7 @@ class Mmu:
             # Add some more context to the error and re-raise
             raise MmuError("Calibration for Gate %d failed. Aborting, because: %s" % (gate, str(ee)))
         finally:
-            if not self.servo_selector:
-                self._servo_auto()
+            self._servo_auto()
 
     def _get_max_selector_movement(self, gate=-1):
         n = gate if gate >= 0 else self.mmu_num_gates - 1
@@ -2372,7 +2370,7 @@ class Mmu:
         if self.servo_selector:
             self.calibration_status |= self.CALIBRATED_SELECTOR
             return
-        if not self.servo_selector:
+        else:
             gate_str = lambda gate : ("Gate %d" % gate) if gate >= 0 else "bypass"
             try:
                 self._initialize_state()
@@ -2412,7 +2410,7 @@ class Mmu:
     def _calibrate_selector_auto(self, save=True, v1_bypass_block=-1):
         # Strategy is to find the two end gates, infer and set number of gates and distribute selector positions
         # Assumption: the user has manually positioned the selector aligned with gate 0 before calling
-        if not self.servo_selector:
+        if self.servo_selector == 0:
             try:
                 self._log_always("Auto calibrating the selector. Excuse the whizz, bang, buzz, clicks...")
                 self._initialize_state()
@@ -2565,7 +2563,7 @@ class Mmu:
         max_speed = gcmd.get_float('MAXSPEED', speed, above=0.)
         save = gcmd.get_int('SAVE', 1, minval=0, maxval=1)
         try:
-            if not self.servo_selector:
+            if self.servo_selector == 0:
                 self._servo_down()
             self.calibrating = True
             with self._require_encoder():
@@ -3747,7 +3745,7 @@ class Mmu:
             self._movequeues_wait_moves()
             self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-        if not self.servo_selector:
+        else:
             self._servo_down()
         retries = self.gate_load_retries if allow_retry else 1
         
@@ -3782,8 +3780,8 @@ class Mmu:
                 else:
                     self._log_debug("Error loading filament - did not find home. %s" % ("Retrying..." if i < retries - 1 else ""))
                     if i < retries - 1:
-                            self._track_gate_statistics('servo_retries', self.gate_selected)
-                if not self.servo_selector:
+                        self._track_gate_statistics('servo_retries', self.gate_selected)
+                if self.servo_selector == 0:
                     if homed:
                         self._log_debug("Gate endstop reached after %.1fmm (measured %.1fmm)" % (actual, measured))
                         self._set_gate_status(self.gate_selected, max(self.gate_status[self.gate_selected], self.GATE_AVAILABLE)) # Don't reset if filament is buffered
@@ -3799,9 +3797,8 @@ class Mmu:
 
         self._set_gate_status(self.gate_selected, self.GATE_EMPTY)
         self._set_filament_pos_state(self.FILAMENT_POS_UNLOADED)
-        if not self.servo_selector:
-            if adjust_servo_on_error:
-                self._servo_auto()
+        if adjust_servo_on_error:
+            self._servo_auto()
         if self.gate_homing_endstop == self.ENDSTOP_ENCODER:
             raise MmuError("Error loading filament at gate - not enough movement detected at encoder")
         else:
@@ -3817,7 +3814,7 @@ class Mmu:
             self._movequeues_wait_moves()
             self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-        if not self.servo_selector:
+        else:
             self._servo_down()
         full = homing_max == self.calibrated_bowden_length
         homing_max = homing_max or self.gate_homing_max
@@ -3860,8 +3857,6 @@ class Mmu:
                 self._set_filament_pos_state(self.FILAMENT_POS_UNLOADED)
                 return
             else:
-                self._log_debug("Did not home to gate sensor")
-            if not self.servo_selector:
                 if homed:
                     self._set_filament_pos_state(self.FILAMENT_POS_HOMED_GATE)
                     # Final parking step
@@ -3899,7 +3894,7 @@ class Mmu:
             self._movequeues_wait_moves()
             self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-        if not self.servo_selector:
+        else:
             self._servo_down()
         tolerance = self.bowden_allowable_load_delta
 
@@ -3970,7 +3965,7 @@ class Mmu:
             self._movequeues_wait_moves()
             self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-        if not self.servo_selector:
+        else:
             self._servo_down()
         tolerance = self.bowden_allowable_unload_delta
 
@@ -4009,7 +4004,7 @@ class Mmu:
             self._movequeues_wait_moves()
             self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-        if not self.servo_selector:
+        else:
             self._servo_down()
         measured = 0
 
@@ -4090,7 +4085,7 @@ class Mmu:
                     self._movequeues_wait_moves()
                     self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-                if not self.servo_selector:
+                else:
                     self._servo_down()
                 speed = self.extruder_sync_load_speed
                 motor = "gear+extruder"
@@ -4099,7 +4094,7 @@ class Mmu:
                     self._movequeues_wait_moves()
                     self.servo.set_value(angle=0, duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-                if not self.servo_selector:
+                else:
                     self._servo_up()
                 speed = self.extruder_load_speed
                 motor = "extruder"
@@ -4163,7 +4158,7 @@ class Mmu:
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                     speed = self.extruder_unload_speed
                     motor = "extruder"
-            if not self.servo_selector:
+            else:
                 synced = self.servo_state == self.SERVO_DOWN_STATE and not extruder_only
                 if synced:
                     self._servo_down()
@@ -4182,7 +4177,7 @@ class Mmu:
                     self._movequeues_wait_moves()
                     self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-                if not self.servo_selector:
+                else:
                     self._servo_down()
                 speed = self.extruder_sync_unload_speed
                 motor = "gear+extruder"
@@ -4801,20 +4796,19 @@ class Mmu:
             se.motor_enable(self.mmu_toolhead.get_last_move_time())
 
     def _measure_to_home(self):
-        if not self.servo_selector:
-            selector_steps = self.selector_stepper.get_step_dist()
-            init_mcu_pos = self.selector_stepper.get_mcu_position()
-            found_home = False
-            try:
-                homing_state = MmuHoming(self.printer, self.mmu_toolhead)
-                homing_state.set_axes([0])
-                self.mmu_kinematics.home(homing_state)
-                found_home = True
-            except Exception as e:
-                pass # Home not found
-            mcu_position = self.selector_stepper.get_mcu_position()
-            traveled = abs(mcu_position - init_mcu_pos) * selector_steps
-            return traveled, found_home
+        selector_steps = self.selector_stepper.get_step_dist()
+        init_mcu_pos = self.selector_stepper.get_mcu_position()
+        found_home = False
+        try:
+            homing_state = MmuHoming(self.printer, self.mmu_toolhead)
+            homing_state.set_axes([0])
+            self.mmu_kinematics.home(homing_state)
+            found_home = True
+        except Exception as e:
+            pass # Home not found
+        mcu_position = self.selector_stepper.get_mcu_position()
+        traveled = abs(mcu_position - init_mcu_pos) * selector_steps
+        return traveled, found_home
 
 
 #################################
@@ -5042,11 +5036,10 @@ class Mmu:
             self._log_debug("Filament detected by sensors: %s" % ', '.join([key for key, value in self._check_all_sensors().items() if value]))
             return True
         elif not self._has_sensor(self.ENDSTOP_GATE) and self._has_encoder():
-            if not self.servo_selector:
-                self._servo_down()
-                found = self._buzz_gear_motor()
-                self._log_debug("Filament %s in encoder after buzzing gear motor" % ("detected" if found else "not detected"))
-                return found
+            self._servo_down()
+            found = self._buzz_gear_motor()
+            self._log_debug("Filament %s in encoder after buzzing gear motor" % ("detected" if found else "not detected"))
+            return found
         self._log_debug("Filament not detected by sensors: %s" % ', '.join([key for key, value in self._check_all_sensors().items()]))
         return False
 
@@ -5058,11 +5051,10 @@ class Mmu:
             self._log_debug("Filament %s by gate sensor" % "detected" if detected else "not detected")
             return detected
         elif self._has_encoder():
-            if not self.servo_selector:
-                self._servo_down()
-                found = self._buzz_gear_motor()
-                self._log_debug("Filament %s in encoder after buzzing gear motor" % ("detected" if found else "not detected"))
-                return found
+            self._servo_down()
+            found = self._buzz_gear_motor()
+            self._log_debug("Filament %s in encoder after buzzing gear motor" % ("detected" if found else "not detected"))
+            return found
         self._log_debug("No sensors configured!")
         return False
 
@@ -5433,9 +5425,8 @@ class Mmu:
         self._log_debug("Selecting tool T%d on Gate %d..." % (tool, gate))
         self._select_gate(gate)
         self._set_tool_selected(tool)
-        if not self.servo_selector:
-            if move_servo:
-                self._servo_auto()
+        if move_servo:
+            self._servo_auto()
         self._log_info("Tool T%d enabled%s" % (tool, (" on Gate %d" % gate) if tool != gate else ""))
 
     def _select_bypass(self):
@@ -5458,8 +5449,7 @@ class Mmu:
             return
 
         with self._wrap_action(self.ACTION_SELECTING):
-            if not self.servo_selector:
-                self._servo_move()
+            self._servo_move()
             if gate == self.TOOL_GATE_BYPASS:
                 offset = self.bypass_offset
                 if self.servo_selector:
@@ -5852,8 +5842,7 @@ class Mmu:
             self._log_info("Warning: Making assumption that bypass is unloaded")
             self.filament_direction = self.DIRECTION_UNKNOWN
             self._set_filament_pos_state(self.FILAMENT_POS_UNLOADED, silent=True)
-            if not self.servo_selector:
-                self._servo_auto()
+            self._servo_auto()
             return
 
         if loaded == 1:
@@ -5867,8 +5856,7 @@ class Mmu:
 
         # Filament position not specified so auto recover
         self._recover_filament_pos(strict=strict, message=True)
-        if not self.servo_selector:
-            self._servo_auto()
+        self._servo_auto()
 
 
 ### GCODE COMMANDS INTENDED FOR TESTING #####################################
