@@ -5593,7 +5593,7 @@ class Mmu:
         finally:
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=self.servo_offsets[gate], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_auto()
@@ -5835,7 +5835,7 @@ class Mmu:
                 self._set_selector_pos(self.selector_offsets[self.gate_selected]) # In case selector stepper was turned off
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[gate], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         elif tool == self.TOOL_GATE_UNKNOWN and self.tool_selected == self.TOOL_GATE_BYPASS and loaded == -1:
             # This is to be able to get out of "stuck in bypass" state
@@ -6916,7 +6916,7 @@ class Mmu:
                 finally:
                     if self.servo_selector:
                         self._movequeues_wait_moves()
-                        self.servo.set_value(angle=self.servo_offsets[gate], duration=self.servo_duration)
+                        self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                         self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                     else:
                         self._servo_auto()
@@ -6961,7 +6961,7 @@ class Mmu:
                 self.calibrating = False
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[gate], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._servo_auto()
