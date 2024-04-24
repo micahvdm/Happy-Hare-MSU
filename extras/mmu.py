@@ -1203,8 +1203,8 @@ class Mmu:
                 self._movequeues_wait_moves()
                 self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-            else:
-                self._servo_move()
+            # else:
+            #     self._servo_move()
             self.gate_status = self._validate_gate_status(self.gate_status) # Delay to allow for correct initial state
             self._update_filaments_from_spoolman()
         except Exception as e:
