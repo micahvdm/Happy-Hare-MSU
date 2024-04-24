@@ -453,37 +453,35 @@ class MmuKinematics:
         for axis in homing_state.get_axes():
             if not axis == 0: # Saftey: Only selector (axis[0]) can be homed
                 continue
-            self.is_homed = True
-            # rail = self.rails[axis]
-            # position_min, position_max = rail.get_range()
-            # hi = rail.get_homing_info()
-            # homepos = [None, None, None, None]
-            # homepos[axis] = hi.position_endstop
-            # forcepos = list(homepos)
-            # if hi.positive_dir:
-            #     forcepos[axis] -= 1.5 * (hi.position_endstop - position_min)
-            # else:
-            #     forcepos[axis] += 1.5 * (position_max - hi.position_endstop)
-            # homing_state.home_rails([rail], forcepos, homepos) # Perform homing
+            rail = self.rails[axis]
+            position_min, position_max = rail.get_range()
+            hi = rail.get_homing_info()
+            homepos = [None, None, None, None]
+            homepos[axis] = hi.position_endstop
+            forcepos = list(homepos)
+            if hi.positive_dir:
+                forcepos[axis] -= 1.5 * (hi.position_endstop - position_min)
+            else:
+                forcepos[axis] += 1.5 * (position_max - hi.position_endstop)
+            homing_state.home_rails([rail], forcepos, homepos) # Perform homing
 
     def set_accel_limit(self, accel):
         self.move_accel = accel
 
     def check_move(self, move):
-        return
-        # limits = self.limits
-        # xpos, ypos = move.end_pos[:2]
-        # if xpos != 0. and (xpos < limits[0][0] or xpos > limits[0][1]):
-        #     raise move.move_error()
+        limits = self.limits
+        xpos, ypos = move.end_pos[:2]
+        if xpos != 0. and (xpos < limits[0][0] or xpos > limits[0][1]):
+            raise move.move_error()
         
-        # if move.axes_d[0]: # Selector
-        #     move.limit_speed(self.selector_max_velocity, self.selector_max_accel)
-        # elif move.axes_d[1]: # Gear
-        #     move.limit_speed(self.gear_max_velocity, min(self.gear_max_accel, self.move_accel) if self.move_accel else self.gear_max_accel)
+        if move.axes_d[0]: # Selector
+            move.limit_speed(self.selector_max_velocity, self.selector_max_accel)
+        elif move.axes_d[1]: # Gear
+            move.limit_speed(self.gear_max_velocity, min(self.gear_max_accel, self.move_accel) if self.move_accel else self.gear_max_accel)
 
     def get_status(self, eventtime):
         return {
-            'selector_homed': self.limits[0][1] <= self.limits[0][1],
+            'selector_homed': self.limits[0][0] <= self.limits[0][1],
             'gear_synced_to_extruder': self.is_gear_synced_to_extruder(),
             'extruder_synced_to_gear': self.is_extruder_synced_to_gear()
         }
@@ -498,57 +496,55 @@ class MmuHoming(Homing, object):
     
     def home_rails(self, rails, forcepos, movepos):
         # Notify of upcoming homing operation
-        self.is_homed = True
-        # self.printer.send_event("homing:home_rails_begin", self, rails)
-        # # Alter kinematics class to think printer is at forcepos
-        # homing_axes = [axis for axis in range(3) if forcepos[axis] is not None]
-        # startpos = self._fill_coord(forcepos)
-        # homepos = self._fill_coord(movepos)
-        # self.toolhead.set_position(startpos, homing_axes=homing_axes)
-        # # Perform first home
-        # endstops = [es for rail in rails for es in rail.get_endstops()]
-        # hi = rails[0].get_homing_info()
-        # hmove = HomingMove(self.printer, endstops, self.toolhead) # Happy Hare: Override default toolhead
-        # hmove.homing_move(homepos, hi.speed)
-        # # Perform second home
-        # if hi.retract_dist:
-        #     # Retract
-        #     startpos = self._fill_coord(forcepos)
-        #     homepos = self._fill_coord(movepos)
-        #     axes_d = [hp - sp for hp, sp in zip(homepos, startpos)]
-        #     move_d = math.sqrt(sum([d*d for d in axes_d[:3]]))
-        #     retract_r = min(1., hi.retract_dist / move_d)
-        #     retractpos = [hp - ad * retract_r
-        #                   for hp, ad in zip(homepos, axes_d)]
-        #     self.toolhead.move(retractpos, hi.retract_speed)
-        #     # Home again
-        #     startpos = [rp - ad * retract_r
-        #                 for rp, ad in zip(retractpos, axes_d)]
-        #     self.toolhead.set_position(startpos)
-        #     hmove = HomingMove(self.printer, endstops, self.toolhead) # Happy Hare: Override default toolhead
-        #     hmove.homing_move(homepos, hi.second_homing_speed)
-        #     if hmove.check_no_movement() is not None:
-        #         raise self.printer.command_error(
-        #             "Endstop %s still triggered after retract"
-        #             % (hmove.check_no_movement(),))
-        # # Signal home operation complete
-        # self.toolhead.flush_step_generation()
-        # self.trigger_mcu_pos = {sp.stepper_name: sp.trig_pos
-        #                         for sp in hmove.stepper_positions}
-        # self.adjust_pos = {}
-        # self.printer.send_event("homing:home_rails_end", self, rails)
-        # if any(self.adjust_pos.values()):
-        #     # Apply any homing offsets
-        #     kin = self.toolhead.get_kinematics()
-        #     homepos = self.toolhead.get_position()
-        #     kin_spos = {s.get_name(): (s.get_commanded_position()
-        #                                + self.adjust_pos.get(s.get_name(), 0.))
-        #                 for s in kin.get_steppers()}
-        #     newpos = kin.calc_position(kin_spos)
-        #     for axis in homing_axes:
-        #         homepos[axis] = newpos[axis]
-        #     self.toolhead.set_position(homepos)
-        # self.servo.set_value(angle=self.servo_angles['up'], duration=None if self.servo_active_up else self.servo_duration)
+        self.printer.send_event("homing:home_rails_begin", self, rails)
+        # Alter kinematics class to think printer is at forcepos
+        homing_axes = [axis for axis in range(3) if forcepos[axis] is not None]
+        startpos = self._fill_coord(forcepos)
+        homepos = self._fill_coord(movepos)
+        self.toolhead.set_position(startpos, homing_axes=homing_axes)
+        # Perform first home
+        endstops = [es for rail in rails for es in rail.get_endstops()]
+        hi = rails[0].get_homing_info()
+        hmove = HomingMove(self.printer, endstops, self.toolhead) # Happy Hare: Override default toolhead
+        hmove.homing_move(homepos, hi.speed)
+        # Perform second home
+        if hi.retract_dist:
+            # Retract
+            startpos = self._fill_coord(forcepos)
+            homepos = self._fill_coord(movepos)
+            axes_d = [hp - sp for hp, sp in zip(homepos, startpos)]
+            move_d = math.sqrt(sum([d*d for d in axes_d[:3]]))
+            retract_r = min(1., hi.retract_dist / move_d)
+            retractpos = [hp - ad * retract_r
+                          for hp, ad in zip(homepos, axes_d)]
+            self.toolhead.move(retractpos, hi.retract_speed)
+            # Home again
+            startpos = [rp - ad * retract_r
+                        for rp, ad in zip(retractpos, axes_d)]
+            self.toolhead.set_position(startpos)
+            hmove = HomingMove(self.printer, endstops, self.toolhead) # Happy Hare: Override default toolhead
+            hmove.homing_move(homepos, hi.second_homing_speed)
+            if hmove.check_no_movement() is not None:
+                raise self.printer.command_error(
+                    "Endstop %s still triggered after retract"
+                    % (hmove.check_no_movement(),))
+        # Signal home operation complete
+        self.toolhead.flush_step_generation()
+        self.trigger_mcu_pos = {sp.stepper_name: sp.trig_pos
+                                for sp in hmove.stepper_positions}
+        self.adjust_pos = {}
+        self.printer.send_event("homing:home_rails_end", self, rails)
+        if any(self.adjust_pos.values()):
+            # Apply any homing offsets
+            kin = self.toolhead.get_kinematics()
+            homepos = self.toolhead.get_position()
+            kin_spos = {s.get_name(): (s.get_commanded_position()
+                                       + self.adjust_pos.get(s.get_name(), 0.))
+                        for s in kin.get_steppers()}
+            newpos = kin.calc_position(kin_spos)
+            for axis in homing_axes:
+                homepos[axis] = newpos[axis]
+            self.toolhead.set_position(homepos)
 
 
 # Extend PrinterRail to allow for multiple (switchable) endstops and to allow for no default endstop
@@ -659,4 +655,3 @@ class MmuExtruderStepper(ExtruderStepper, object):
         if endstop_pin:
             mcu_endstop = gear_rail.add_extra_endstop(endstop_pin, 'mmu_ext_touch', bind_rail_steppers=True)
             mcu_endstop.add_stepper(self.stepper)
-
