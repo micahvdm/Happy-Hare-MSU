@@ -990,10 +990,10 @@ class Mmu:
         self._schedule_mmu_bootup_tasks(self.BOOT_DELAY)
 
     def _initialize_state(self):
+        self.is_enabled = self.runout_enabled = True
         if self.servo_selector:
             self.is_homed = True
-        self.is_enabled = self.runout_enabled = True
-        if not self.servo_selector:
+        else:
             self.is_homed = self.is_handling_runout = self.calibrating = False
         self.last_print_stats = self.paused_extruder_temp = self.reason_for_pause = None
         self.tool_selected = self._next_tool = self.TOOL_GATE_UNKNOWN
