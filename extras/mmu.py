@@ -416,7 +416,7 @@ class Mmu:
         # User MMU setup
         self.mmu_num_gates = config.getint('mmu_num_gates')
         self.selector_offsets = list(config.getfloatlist('selector_offsets', []))
-        self.servo_offsets = list(config.getintlist('servo_offsets', []))
+        self.servo_offsets = list(config.getfloatlist('servo_offsets', []))
         self.bypass_offset = config.getfloat('selector_bypass', 0)
         self.default_ttg_map = list(config.getintlist('tool_to_gate_map', []))
         self.default_gate_status = list(config.getintlist('gate_status', []))
@@ -1140,7 +1140,7 @@ class Mmu:
                     self._set_selector_pos(self.selector_offsets[self.gate_selected])
                     if self.servo_selector:
                         self._movequeues_wait_moves()
-                        self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1])
+                        self.servo.set_value(angle=self.servo_offsets[self.gate_selected])
                         self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 elif self.gate_selected == self.TOOL_GATE_BYPASS:
                     self._set_selector_pos(self.bypass_offset)
@@ -3743,7 +3743,7 @@ class Mmu:
         self._set_filament_direction(self.DIRECTION_LOAD)
         if self.servo_selector:
             self._movequeues_wait_moves()
-            self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+            self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             self._servo_down()
@@ -3812,7 +3812,7 @@ class Mmu:
         self._set_filament_direction(self.DIRECTION_UNLOAD)
         if self.servo_selector:
             self._movequeues_wait_moves()
-            self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+            self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             self._servo_down()
@@ -3892,7 +3892,7 @@ class Mmu:
         self._set_filament_direction(self.DIRECTION_LOAD)
         if self.servo_selector:
             self._movequeues_wait_moves()
-            self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+            self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             self._servo_down()
@@ -3963,7 +3963,7 @@ class Mmu:
         self._set_filament_direction(self.DIRECTION_UNLOAD)
         if self.servo_selector:
             self._movequeues_wait_moves()
-            self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+            self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             self._servo_down()
@@ -4002,7 +4002,7 @@ class Mmu:
         self._set_filament_direction(self.DIRECTION_LOAD)
         if self.servo_selector:
             self._movequeues_wait_moves()
-            self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+            self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             self._servo_down()
@@ -4083,7 +4083,7 @@ class Mmu:
             if synced:
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._servo_down()
@@ -4148,7 +4148,7 @@ class Mmu:
                 synced = not extruder_only
                 if synced:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                     speed = self.extruder_sync_unload_speed
                     motor = "gear+extruder"
@@ -4175,7 +4175,7 @@ class Mmu:
                 synced = True
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._servo_down()
@@ -4664,7 +4664,7 @@ class Mmu:
         if not self.selector_touch:
             self._trace_selector_move("Positioning selector", target)
         elif self.servo_selector:
-            self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+            self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
         else:
             init_pos = self.mmu_toolhead.get_position()[0]
             halt_pos, successful = self._attempt_selector_touch_move(target)
@@ -4771,7 +4771,7 @@ class Mmu:
                 self._log_stepper("SELECTOR: position=%.1f, speed=%.1f, accel=%.1f" % (new_pos, speed, accel))
             pos[0] = new_pos
             if self.servo_selector:
-                self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
             else:
                 self.mmu_toolhead.move(pos, speed)
             if wait:
@@ -4783,7 +4783,7 @@ class Mmu:
     def _set_selector_pos(self, new_pos):
         if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 self.is_homed = True
         else:
@@ -5100,7 +5100,7 @@ class Mmu:
         if self.servo_selector:
                 if sync:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._movequeues_wait_moves()
@@ -5208,7 +5208,7 @@ class Mmu:
         else:
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_down()
@@ -5243,7 +5243,7 @@ class Mmu:
         else:
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 if self.gear_rail.is_endstop_virtual(endstop):
                     self._movequeues_dwell(1, toolhead=False) # TMC needs time to settle after gear buzz for servo
@@ -5408,7 +5408,7 @@ class Mmu:
         self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
         if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             self._servo_auto()
@@ -5459,7 +5459,7 @@ class Mmu:
             else:
                 offset = self.selector_offsets[gate]
                 if self.servo_selector:
-                    offset = self.servo_offsets[gate + 1]
+                    offset = self.servo_offsets[gate]
                     self._movequeues_wait_moves()
                     self.servo.set_value(angle=offset)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
@@ -5593,7 +5593,7 @@ class Mmu:
         finally:
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_auto()
@@ -5835,7 +5835,7 @@ class Mmu:
                 self._set_selector_pos(self.selector_offsets[self.gate_selected]) # In case selector stepper was turned off
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         elif tool == self.TOOL_GATE_UNKNOWN and self.tool_selected == self.TOOL_GATE_BYPASS and loaded == -1:
             # This is to be able to get out of "stuck in bypass" state
@@ -5930,7 +5930,7 @@ class Mmu:
         if self._check_in_bypass(): return
         if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             self._servo_down()
@@ -6916,7 +6916,7 @@ class Mmu:
                 finally:
                     if self.servo_selector:
                         self._movequeues_wait_moves()
-                        self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                        self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                         self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                     else:
                         self._servo_auto()
@@ -6961,7 +6961,7 @@ class Mmu:
                 self.calibrating = False
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected + 1], duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[gate], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._servo_auto()
