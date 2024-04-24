@@ -416,7 +416,7 @@ class Mmu:
         # User MMU setup
         self.mmu_num_gates = config.getint('mmu_num_gates')
         self.selector_offsets = list(config.getfloatlist('selector_offsets', []))
-        self.servo_offsets = list(config.getfloatlist('servo_offsets', []))
+        self.servo_offsets = list(config.getfloatlist('servo_offsets', [260, 220, 180, 140, 100]))
         self.bypass_offset = config.getfloat('selector_bypass', 0)
         self.default_ttg_map = list(config.getintlist('tool_to_gate_map', []))
         self.default_gate_status = list(config.getintlist('gate_status', []))
