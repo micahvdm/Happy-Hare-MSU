@@ -4720,6 +4720,7 @@ class Mmu:
             self._log_trace(trace_str)
         if self.servo_selector:
             homed = True
+            return
         else:
             speed = speed or self.selector_move_speed
             accel = self.mmu_toolhead.get_selector_limits()[1]
