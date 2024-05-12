@@ -2016,9 +2016,9 @@ class Mmu:
 
     def _servo_auto(self):
         if not self.is_homed or self.tool_selected < 0 or self.gate_selected < 0:
-            self._servo_move()
+            pass
         else:
-            self._servo_up()
+            pass
 
     def _motors_off(self, motor="all"):
         stepper_enable = self.printer.lookup_object('stepper_enable')
