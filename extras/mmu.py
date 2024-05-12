@@ -2100,7 +2100,7 @@ class Mmu:
         elif motor == "servo":
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=0, duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_duration, 0.5), mmu_toolhead=False)
                 self.servo.set_value(angle=270, duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_duration, 0.5), mmu_toolhead=False)
@@ -4101,7 +4101,7 @@ class Mmu:
             else:
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=0, duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._servo_up()
@@ -4163,7 +4163,7 @@ class Mmu:
                     motor = "gear+extruder"
                 else:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=0, duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                     speed = self.extruder_unload_speed
                     motor = "extruder"
@@ -4335,7 +4335,7 @@ class Mmu:
             if not self._is_printing():
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=0, duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._servo_up()
@@ -4355,7 +4355,7 @@ class Mmu:
             self._log_debug("Filament already ejected")
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=0, duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_auto()
@@ -4438,7 +4438,7 @@ class Mmu:
             else:
                 if self.servo_selector:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=0, duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._servo_up()
@@ -4495,7 +4495,7 @@ class Mmu:
                 length = self.encoder_move_step_size
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=0, duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_up()
@@ -5076,7 +5076,7 @@ class Mmu:
             self._ensure_safe_extruder_temperature(wait=False)
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=0, duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_up()
@@ -5114,7 +5114,7 @@ class Mmu:
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 else:
                     self._movequeues_wait_moves()
-                    self.servo.set_value(angle=0, duration=self.servo_duration)
+                    self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                     self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
         else:
             if servo:
@@ -5211,7 +5211,7 @@ class Mmu:
         if motor == "extruder":
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=0, duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_up()
@@ -5246,7 +5246,7 @@ class Mmu:
         if motor == "extruder":
             if self.servo_selector:
                 self._movequeues_wait_moves()
-                self.servo.set_value(angle=0, duration=self.servo_duration)
+                self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
             else:
                 self._servo_up()
