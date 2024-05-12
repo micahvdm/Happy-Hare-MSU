@@ -1970,6 +1970,7 @@ class Mmu:
             self._log_info("Servo angle unknown")
 
     def _servo_down(self, buzz_gear=True):
+        if self.servo_selector: return
         if self.gate_selected == self.TOOL_GATE_BYPASS: return
         if self.servo_state == self.SERVO_DOWN_STATE: return
         self._log_debug("Setting servo to down (filament drive) position at angle: %d" % self.servo_angles['down'])
@@ -1985,6 +1986,7 @@ class Mmu:
         self.servo_state = self.SERVO_DOWN_STATE
 
     def _servo_move(self): # Position servo for selector movement
+        if self.servo_selector: return
         if self.servo_state == self.SERVO_MOVE_STATE: return
         self._log_debug("Setting servo to move (filament hold) position at angle: %d" % self.servo_angles['move'])
         if self.servo_angle != self.servo_angles['move']:
@@ -1995,6 +1997,7 @@ class Mmu:
             self.servo_state = self.SERVO_MOVE_STATE
 
     def _servo_up(self, measure=False):
+        if self.servo_selector: return
         if self.servo_state == self.SERVO_UP_STATE: return 0.
         self._log_debug("Setting servo to up (filament released) position at angle: %d" % self.servo_angles['up'])
         delta = 0.
@@ -2015,6 +2018,7 @@ class Mmu:
         return delta
 
     def _servo_auto(self):
+        if self.servo_selector: return
         if not self.is_homed or self.tool_selected < 0 or self.gate_selected < 0:
             pass
         else:
