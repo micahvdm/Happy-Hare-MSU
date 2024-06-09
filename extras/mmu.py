@@ -5545,8 +5545,8 @@ class Mmu:
         if self._check_is_disabled(): return
         if self.virtual_selector: return
         if self.servo_selector:
-	    self.is_homed = True
-	    return
+	        self.is_homed = True
+	        return
         if self._check_is_calibrated(self.CALIBRATED_SELECTOR):
             self._log_always("Will home to endstop only!")
             tool = -1
