@@ -1200,7 +1200,6 @@ class Mmu:
                 self._movequeues_wait_moves()
                 self.servo.set_value(angle=self.servo_offsets[self.gate_selected], duration=self.servo_duration)
                 self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
-		self.is_homed = True
             else:
                 self._servo_down()
             self.gate_status = self._validate_gate_status(self.gate_status) # Delay to allow for correct initial state
@@ -5545,7 +5544,7 @@ class Mmu:
         self._log_to_file(gcmd.get_commandline())
         if self._check_is_disabled(): return
         if self.virtual_selector: return
-        if self.servo_selector: 
+        if self.servo_selector:
 		self.is_homed = True
 		return
         if self._check_is_calibrated(self.CALIBRATED_SELECTOR):
