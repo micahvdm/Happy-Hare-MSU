@@ -1149,7 +1149,7 @@ class Mmu:
                         self.servo.set_value(angle=0)
                         self._movequeues_dwell(max(self.servo_dwell, self.servo_duration, 0))
                 elif self.gate_selected == self.TOOL_GATE_UNKNOWN:
-                    self.is_homed = False
+                    self.is_homed = True
             else:
                 errors.append("Incorrect number of gates specified in %s or %s" % (self.VARS_MMU_TOOL_SELECTED, self.VARS_MMU_GATE_SELECTED))
 
@@ -2032,7 +2032,7 @@ class Mmu:
             ge.motor_disable(self.mmu_toolhead.get_last_move_time())
         if motor in ["all", "selector"]:
             self._servo_move()
-            self.is_homed = False
+            self.is_homed = True
             self._set_gate_selected(self.TOOL_GATE_UNKNOWN)
             self._set_tool_selected(self.TOOL_GATE_UNKNOWN)
             se = stepper_enable.lookup_enable(self.selector_stepper.get_name())
@@ -4654,9 +4654,7 @@ class Mmu:
     def _home_selector(self):
         self.is_homed = False
         self.gate_selected = self.TOOL_GATE_UNKNOWN
-        if self.servo_selector:
-			self.is_homed = True
-			return
+        if self.servo_selector: self.is_homed = True
         self._servo_move()
         self._movequeues_wait_moves()
         homing_state = MmuHoming(self.printer, self.mmu_toolhead)
@@ -4704,11 +4702,11 @@ class Mmu:
                     successful, halt_pos = self._attempt_selector_touch_move(target)
                     if not successful:
                         # Selector path is still blocked
-                        self.is_homed = False
+                        self.is_homed = True
                         self._unselect_tool()
                         raise MmuError("Selector recovery failed. Path is probably internally blocked")
                 else: # Selector path is blocked, probably not internally
-                    self.is_homed = False
+                    self.is_homed = True
                     self._unselect_tool()
                     raise MmuError("Selector path is probably externally blocked")
 
@@ -5544,9 +5542,7 @@ class Mmu:
         self._log_to_file(gcmd.get_commandline())
         if self._check_is_disabled(): return
         if self.virtual_selector: return
-        if self.servo_selector:
-	        self.is_homed = True
-	        return
+        if self.servo_selector: self.is_homed = True
         if self._check_is_calibrated(self.CALIBRATED_SELECTOR):
             self._log_always("Will home to endstop only!")
             tool = -1
